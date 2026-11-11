@@ -1,26 +1,54 @@
 def mask_card_number(number):
-    """
-    Hides all but the last four digits of a card number.
-    Assumes number is a non-empty string.
-    """
-    digits = number.replace(' ', '').replace('-', '')
-    return '*' * 12 + digits[-4:]
+    """Mask a card number, showing only its last four digits."""
+    if not isinstance(number, str) or not number.strip():
+        return "*" * 16
+
+    digits = "".join(ch for ch in number if ch.isdigit())
+
+    if not digits:
+        return "*" * 16
+
+    return "*" * 12 + digits[-4:]
+
 
 def parse_transaction(line):
-    """
-    Parses 'date,category,amount' into a (category, amount) tuple.
-    Assumes all three fields are present and amount is a whole number.
-    """
-    parts = line.split(',')
-    return parts[1].strip().lower(), int(parts[2])
+    """Parse date, category and amount safely."""
+    if not isinstance(line, str):
+        return ("unknown", 0)
+
+    parts = line.split(",")
+
+    if len(parts) != 3:
+        return ("unknown", 0)
+
+    date = parts[0].strip()
+    category = parts[1].strip().lower()
+    amount_text = parts[2].strip().replace(",", "")
+
+    if not date or not category:
+        return ("unknown", 0)
+
+    try:
+        amount = int(amount_text)
+    except (ValueError, TypeError):
+        return ("unknown", 0)
+
+    return (category, amount)
+
 
 def parse_statement_total(text):
-    """
-    Reads the amount from a line such as 'Total: 12,500'.
-    Assumes the line has a colon followed by a number.
-    """
-    amount = text.split(':')[1]
-    return int(amount.replace(',', ''))
+    """Safely extract a statement total."""
+    if not isinstance(text, str) or ":" not in text:
+        return 0
+
+    amount = text.split(":", 1)[1].strip()
+    amount = amount.replace(",", "")
+
+    try:
+        return int(amount)
+    except (ValueError, TypeError):
+        return 0
+
 
 def main():
     print("==== Running mask_card_number ====")
@@ -34,6 +62,7 @@ def main():
     print("\n==== Running parse_statement_total ====")
     value = input("Enter the statement total line (e.g. Total: 12,500): ")
     print("Statement total:", parse_statement_total(value))
+
 
 if __name__ == "__main__":
     main()
